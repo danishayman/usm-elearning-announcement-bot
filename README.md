@@ -1,74 +1,32 @@
 # 🎓 USM eLearning Announcement Monitor
 
-Advanced automated monitoring system for Universiti Sains Malaysia's eLearning portal. Automatically detects new course announcements and sends instant email notifications with smart SSO authentication, course caching, and configurable monitoring rules.
+Automated monitoring system for Universiti Sains Malaysia's eLearning portal. Get instant email notifications when new course announcements are posted.
 
-> **⚡ Quick Setup:** Only **4 environment variables** required! Everything else has sensible defaults.
 
-## ✨ Features
 
-### 🔒 **Smart Authentication**
-- **USM Identity SSO Support**: Full ADFS authentication automation using Playwright
-- **Session Persistence**: Saves and reuses login sessions to minimize re-authentication
-- **Auto-Reauthentication**: Detects expired sessions and automatically logs back in
-- **Headless Browser Mode**: Runs invisibly in the background or visible for debugging
+## 📋 Table of Contents
 
-### 🎯 **Intelligent Course Monitoring**
-- **Auto-Discovery**: Automatically finds all enrolled courses
-- **Smart Caching**: Stores course list locally to reduce server load
-- **Selective Monitoring**: Configure which courses to monitor via `config.json`
-- **Course Exclusion**: Exclude specific courses you don't want to track
-
-### 📬 **Advanced Notifications**
-- **Beautiful HTML Emails**: Modern, responsive email design with enhanced styling
-- **Full Announcement Content**: Automatically fetches and includes complete announcement text in emails
-- **Rich Metadata**: Displays announcement titles, authors, dates, and course information
-- **Direct Links**: Click straight through to read announcements on eLearning portal
-- **Plain Text Fallback**: Email clients without HTML support get well-formatted plain text
-- **Error Alerts**: Get notified if the monitor encounters issues
-
-### 💾 **Robust Data Management**
-- **SQLite Database**: Persistent tracking of all announcements
-- **Duplicate Prevention**: Never get notified twice for the same announcement
-- **Historical Data**: Keep track of all past announcements
-- **Auto Cleanup**: Automatically remove old records to manage database size
-
-### ⚙️ **Flexible Operation**
-- **Scheduled Mode**: Runs continuously with configurable check intervals
-- **Once Mode**: Run a single check (perfect for cron jobs)
-- **Configurable Intervals**: Set check frequency from minutes to hours
-- **Graceful Shutdown**: Handles interrupts cleanly
-
-### 📊 **Comprehensive Logging**
-- **Dual Output**: Logs to both console and file (`logs/app.log`)
-- **Detailed Statistics**: Track courses checked, new announcements, and more
-- **Error Tracking**: Full error logs with stack traces for debugging
+- [Getting Started](#-getting-started)
+  - [Option 1: Local Setup](#option-1-local-setup-run-on-your-computer)
+  - [Option 2: GitHub Actions Setup](#option-2-github-actions-setup-free-automated-cloud-monitoring) (Recommended for 24/7 monitoring)
+- [Configuration](#️-configuration-optional)
+- [Troubleshooting](#-troubleshooting)
 
 ---
 
-## 📋 Requirements
+## 🚀 Getting Started
 
-- **Python 3.8+**
-- **Valid USM eLearning account**
-- **Email account** (Gmail recommended) for sending notifications
-- **2-5 MB disk space** for dependencies and data
+### Option 1: Local Setup (Run on Your Computer)
 
-### 🎯 Setup Summary
-```
-1. Install: pip install -r requirements.txt && playwright install chromium
-2. Configure: Copy .env.example to .env, add 4 credentials
-3. Run: python main.py
-```
+Perfect if you want to run the monitor on your personal computer.
 
----
-
-## 🚀 Quick Start
-
-### 1️⃣ Clone & Install
+#### 1️⃣ Fork & Clone
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/usm-elearning-monitor.git
-cd usm-elearning-monitor
+# Fork the repository on GitHub first (click "Fork" button)
+# Then clone YOUR fork
+git clone https://github.com/danishayman/usm-elearning-announcement-bot.git
+cd usm-elearning-announcement-bot
 
 # Install Python dependencies
 pip install -r requirements.txt
@@ -77,14 +35,9 @@ pip install -r requirements.txt
 playwright install chromium
 ```
 
-### 2️⃣ Configure (Only 4 Settings Required!)
+#### 2️⃣ Configure Credentials
 
-```bash
-# Copy the example file
-cp .env.example .env
-```
-
-Then edit `.env` and add **only these 4 credentials**:
+Create a `.env` file in the project root with your credentials (only 4 required!):
 
 ```env
 USM_EMAIL=your_email@student.usm.my
@@ -93,29 +46,9 @@ SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_gmail_app_password
 ```
 
-**That's it!** 🎉 Everything else uses smart defaults:
-- ✅ Gmail SMTP (`smtp.gmail.com:587`)
-- ✅ Current semester URL (`https://elearning.usm.my/sidang2526`)
-- ✅ 30-minute check interval
-- ✅ Headless browser mode
-- ✅ Email notifications enabled
+**That's it!** Everything else uses smart defaults.
 
-<details>
-<summary><b>📝 Need to customize?</b> (click to expand)</summary>
-
-Override any defaults in your `.env`:
-```env
-SMTP_SERVER=smtp.gmail.com          # Change for non-Gmail
-SMTP_PORT=587                       # 465 for SSL, 587 for TLS
-MOODLE_BASE_URL=https://elearning.usm.my/sidang2526
-RUN_MODE=scheduled                  # or 'once' for single check
-HEADLESS=true                       # false to see browser
-```
-
-All options are in `.env.example`
-</details>
-
-#### 📧 **Gmail Setup (App Password)**
+#### 📧 Gmail Setup (App Password)
 
 Gmail requires an App Password for security:
 
@@ -123,568 +56,189 @@ Gmail requires an App Password for security:
 2. Generate an [App Password](https://myaccount.google.com/apppasswords)
 3. Use the 16-character password as `SMTP_PASS`
 
-#### 📮 **Other Email Providers**
-
-<details>
-<summary><b>Outlook/Hotmail</b></summary>
-
-```env
-SMTP_USER=your_email@outlook.com
-SMTP_PASS=your_password
-SMTP_SERVER=smtp-mail.outlook.com
-SMTP_PORT=587
-```
-</details>
-
-<details>
-<summary><b>Yahoo Mail</b></summary>
-
-```env
-SMTP_USER=your_email@yahoo.com
-SMTP_PASS=your_app_password
-SMTP_SERVER=smtp.mail.yahoo.com
-SMTP_PORT=587
-```
-</details>
-
-<details>
-<summary><b>Custom SMTP Server</b></summary>
-
-```env
-SMTP_USER=your_email@domain.com
-SMTP_PASS=your_password
-SMTP_SERVER=smtp.yourdomain.com
-SMTP_PORT=587  # or 465 for SSL
-```
-</details>
-
-### 3️⃣ Run the Monitor
+#### 3️⃣ Run the Monitor
 
 ```bash
 # Run in scheduled mode (continuous monitoring)
 python main.py
-
-# Run once and exit (useful for cron jobs)
-RUN_MODE=once python main.py
-
-# Run with visible browser (for debugging)
-HEADLESS=false python main.py
 ```
+
+---
+
+### Option 2: GitHub Actions Setup (Free Automated Cloud Monitoring)
+
+Run the monitor automatically on GitHub's servers for free! Perfect for 24/7 monitoring without keeping your computer on.
+
+#### 1️⃣ Fork the Repository
+
+1. Go to the [original repository](https://github.com/danishayman/usm-elearning-announcement-bot)
+2. Click the **Fork** button in the top right
+3. This creates your own copy of the project
+
+#### 2️⃣ Set Up Repository Secrets
+
+Secrets keep your credentials secure in GitHub Actions.
+
+1. Go to your forked repository on GitHub
+2. Click **Settings** (top menu bar)
+3. In the left sidebar, click **Secrets and variables** → **Actions**
+4. Click **New repository secret** button
+5. Add these 4 secrets one by one:
+
+| Secret Name | Value | Example |
+|------------|-------|---------|
+| `USM_EMAIL` | Your USM email | `student@student.usm.my` |
+| `USM_PASSWORD` | Your USM password | `YourPassword123` |
+| `SMTP_USER` | Your email for notifications | `yourname@gmail.com` |
+| `SMTP_PASS` | Gmail App Password | `abcd efgh ijkl mnop` |
+
+**How to add each secret:**
+- Click "New repository secret"
+- Enter the **Name** (e.g., `USM_EMAIL`)
+- Enter the **Value** (your actual credential)
+- Click "Add secret"
+- Repeat for all 4 secrets
+
+#### 3️⃣ Enable GitHub Actions
+
+The workflow file is already included in the repository (`.github/workflows/check.yml`).
+
+1. Go to the **Actions** tab in your repository
+2. If prompted, click **"I understand my workflows, go ahead and enable them"**
+3. You should see the **"USM eLearning Monitor"** workflow listed
+
+#### 4️⃣ Test Your Setup
+
+1. Go to **Actions** tab
+2. Click on **"USM eLearning Monitor"** workflow
+3. Click **"Run workflow"** button (on the right)
+4. Select branch (usually `main`)
+5. Click **"Run workflow"**
+6. Wait for it to complete (usually 1-2 minutes)
+7. Check your email for any new announcements!
+
+#### 📅 Schedule Customization
+
+The default schedule runs every 30 minutes. To change this, edit the `cron` line in the workflow file:
+
+```yaml
+# Every 15 minutes
+- cron: '*/15 * * * *'
+
+# Every hour
+- cron: '0 * * * *'
+
+# Every 2 hours
+- cron: '0 */2 * * *'
+
+# Every day at 8 AM UTC
+- cron: '0 8 * * *'
+```
+
+**Note:** GitHub Actions may delay scheduled runs by 3-10 minutes during peak times.
+
+#### 🔍 Monitoring Your Workflow
+
+- **Check run history:** Go to Actions tab to see all past runs
+- **View logs:** Click any run to see detailed logs
+- **Email notifications:** GitHub can email you if a workflow fails (Settings → Notifications)
+
+#### ⚠️ Important Notes
+
+- **Free tier limits:** 2,000 minutes/month (plenty for this use case)
+- **Data persistence:** The workflow automatically saves and restores the announcements database between runs using GitHub Actions artifacts
+- **Manual runs:** Use "Run workflow" button to trigger immediately
+- **Disable anytime:** Go to Actions → Select workflow → "..." menu → Disable workflow
 
 ---
 
 ## 📁 Project Structure
 
 ```
-usm-elearning-monitor/
-├── main.py                    # Main entry point with scheduling
-├── login.py                   # USM Identity SSO authentication
+usm-elearning-announcement-bot/
+├── main.py                    # Main entry point
+├── login.py                   # USM SSO authentication
 ├── monitor.py                 # Core monitoring logic
 ├── utils/
-│   ├── __init__.py
-│   ├── emailer.py            # Email notification system
-│   ├── parser.py             # HTML parsing for courses/announcements
-│   └── storage.py            # Database & cache management
-├── data/
-│   ├── announcements.db      # SQLite database (auto-created)
-│   ├── courses.json          # Course cache (auto-created)
-│   └── session.json          # Login session (auto-created)
-├── logs/
-│   └── app.log               # Application logs (auto-created)
-├── config.json               # Monitoring configuration
-├── .env                      # Environment variables (you create this)
-├── .env.example              # Environment template
+│   ├── emailer.py            # Email notifications
+│   ├── parser.py             # HTML parsing
+│   └── storage.py            # Database management
+├── data/                     # Auto-created data folder
+│   ├── announcements.db      # SQLite database
+│   └── courses.json          # Course cache
+├── logs/                     # Auto-created logs
+│   └── app.log
+├── config.json               # Configuration file
+├── .env                      # Your credentials (create this)
 ├── requirements.txt          # Python dependencies
-└── README.md                 # This file
+└── README.md
 ```
 
 ---
 
-## ⚙️ Advanced Configuration
+## ⚙️ Configuration (Optional)
 
-The defaults work great for most users, but you can customize behavior via `config.json`:
+Edit `config.json` to customize monitoring behavior:
 
 ```json
 {
   "monitor_all_courses": true,
-  "monitored_course_ids": [],
   "excluded_course_ids": [],
   "check_interval_minutes": 30,
   "notification_settings": {
     "send_email": true,
     "send_error_alerts": true,
     "fetch_full_content": true
-  },
-  "database_cleanup_days": 90
+  }
 }
 ```
 
-### Configuration Options
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `monitor_all_courses` | `true` | Monitor all enrolled courses |
-| `monitored_course_ids` | `[]` | Specific course IDs to monitor (when `monitor_all_courses` is `false`) |
-| `excluded_course_ids` | `[]` | Course IDs to exclude from monitoring |
-| `check_interval_minutes` | `30` | How often to check for new announcements |
-| `send_email` | `true` | Enable email notifications |
-| `send_error_alerts` | `true` | Get notified about system errors |
-| `fetch_full_content` | `true` | Include full announcement text in emails |
-| `database_cleanup_days` | `90` | Remove announcements older than X days |
-
-### Finding Course IDs
-
-To exclude specific courses or set up selective monitoring:
-
-1. Run the monitor once: `python main.py`
-2. Check `data/courses.json` for all course IDs
-3. Add IDs to `config.json` as needed
-
-**Example - Exclude specific courses:**
-```json
-{
-  "monitor_all_courses": true,
-  "excluded_course_ids": ["12345", "67890"]
-}
-```
-
-**Example - Monitor only specific courses:**
-```json
-{
-  "monitor_all_courses": false,
-  "monitored_course_ids": ["11111", "22222", "33333"]
-}
-```
-
----
-
-## 🐳 Deployment
-
-### **Render.com** (Recommended)
-
-Render.com offers free hosting with persistent storage.
-
-#### Setup Steps:
-
-1. **Fork this repository** to your GitHub account
-
-2. **Create a new Web Service** on [Render.com](https://render.com)
-   - Connect your GitHub repository
-   - Select **Web Service**
-   - Choose the forked repository
-
-3. **Configure the service:**
-   ```yaml
-   Name: usm-elearning-monitor
-   Environment: Python 3
-   Build Command: pip install -r requirements.txt && playwright install chromium --with-deps
-   Start Command: python main.py
-   ```
-
-4. **Add Environment Variables** in Render dashboard (only 4 required!):
-   - `USM_EMAIL` (your USM email)
-   - `USM_PASSWORD` (your USM password)
-   - `SMTP_USER` (your email for notifications)
-   - `SMTP_PASS` (your email app password)
-   
-   Optional (defaults work for most users):
-   - `SMTP_SERVER=smtp.gmail.com` (only if not using Gmail)
-   - `SMTP_PORT=587` (only if using different port)
-   - `RUN_MODE=scheduled` (already default)
-   - `HEADLESS=true` (already default)
-
-5. **Add Persistent Disk** (to save data between restarts):
-   - Mount Path: `/opt/render/project/src/data`
-   - Size: 1GB (free tier)
-
-6. **Deploy!** 🚀
-
-#### Important Notes:
-- Free tier sleeps after 15 minutes of inactivity
-- Use **Background Worker** instead of Web Service for 24/7 operation
-- Logs are available in the Render dashboard
-
----
-
-### **Railway.app**
-
-Railway offers excellent developer experience with automatic deployments.
-
-#### Setup Steps:
-
-1. **Fork this repository**
-
-2. **Create new project** on [Railway.app](https://railway.app)
-   - Click "New Project"
-   - Select "Deploy from GitHub repo"
-   - Choose your forked repository
-
-3. **Add environment variables (only 4 required!):**
-   ```
-   USM_EMAIL=your_email@student.usm.my
-   USM_PASSWORD=your_password
-   SMTP_USER=your_email@gmail.com
-   SMTP_PASS=your_gmail_app_password
-   ```
-   
-   Optional (use defaults unless you need to customize):
-   ```
-   SMTP_SERVER=smtp.gmail.com  # Default for Gmail
-   SMTP_PORT=587               # Default TLS port
-   RUN_MODE=scheduled          # Already default
-   HEADLESS=true               # Already default
-   ```
-
-4. **Configure start command** (in Railway settings):
-   ```bash
-   playwright install chromium --with-deps && python main.py
-   ```
-
-5. **Add volume** for persistent storage:
-   - Mount path: `/app/data`
-
-6. **Deploy!** 🎉
-
----
-
-### **Docker Deployment**
-
-<details>
-<summary><b>Docker Setup</b></summary>
-
-Create a `Dockerfile`:
-
-```dockerfile
-FROM python:3.11-slim
-
-# Install system dependencies for Playwright
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set working directory
-WORKDIR /app
-
-# Copy requirements and install
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Install Playwright browsers
-RUN playwright install chromium --with-deps
-
-# Copy application files
-COPY . .
-
-# Create data and logs directories
-RUN mkdir -p data logs
-
-# Run the application
-CMD ["python", "main.py"]
-```
-
-Create `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  monitor:
-    build: .
-    env_file: .env
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-    restart: unless-stopped
-```
-
-Run with Docker:
-
-```bash
-docker-compose up -d
-```
-</details>
-
----
-
-### **Linux Server (systemd)**
-
-<details>
-<summary><b>Systemd Service Setup</b></summary>
-
-Create `/etc/systemd/system/usm-elearning-monitor.service`:
-
-```ini
-[Unit]
-Description=USM eLearning Announcement Monitor
-After=network.target
-
-[Service]
-Type=simple
-User=your_username
-WorkingDirectory=/path/to/usm-elearning-monitor
-Environment="PATH=/path/to/venv/bin:/usr/bin"
-ExecStart=/path/to/venv/bin/python main.py
-Restart=always
-RestartSec=60
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable usm-elearning-monitor
-sudo systemctl start usm-elearning-monitor
-sudo systemctl status usm-elearning-monitor
-```
-
-View logs:
-
-```bash
-sudo journalctl -u usm-elearning-monitor -f
-```
-</details>
-
----
-
-## 🛠️ Advanced Usage
-
-### Running as Cron Job
-
-Instead of continuous monitoring, you can run periodic checks:
-
-```bash
-# Edit crontab
-crontab -e
-
-# Add: Check every 30 minutes
-*/30 * * * * cd /path/to/usm-elearning-monitor && RUN_MODE=once /path/to/python main.py >> logs/cron.log 2>&1
-```
-
-### Testing Individual Components
-
-```bash
-# Test SSO login only
-python login.py
-
-# Test monitoring (single check)
-python monitor.py
-
-# Run in debug mode (visible browser)
-HEADLESS=false python main.py
-```
+**To exclude specific courses:**
+1. Run the monitor once to generate `data/courses.json`
+2. Find the course IDs you want to exclude
+3. Add them to `excluded_course_ids` in `config.json`
 
 ---
 
 ## 🐛 Troubleshooting
 
 ### Login Issues
-
-**Problem:** Authentication fails
-
-**Solutions:**
-- ✅ Verify credentials in `.env`
-- ✅ Try logging in manually via browser to ensure account works
-- ✅ Run with `HEADLESS=false` to watch the login process
-- ✅ Check if USM Identity page structure changed
-- ✅ Ensure Playwright browsers are installed: `playwright install chromium`
+- Verify credentials are correct
+- Run with `HEADLESS=false` to watch browser login
+- Ensure Playwright is installed: `playwright install chromium`
 
 ### Email Not Sending
+- For Gmail, use App Password (not regular password)
+- Check spam/junk folder
+- Verify SMTP credentials
 
-**Problem:** No email notifications received
-
-**Solutions:**
-- ✅ Verify SMTP credentials are correct
-- ✅ For Gmail, ensure you're using App Password, not regular password
-- ✅ Check spam/junk folder
-- ✅ Test SMTP settings with a simple Python script
-- ✅ Check firewall isn't blocking SMTP ports (587/465)
+### GitHub Actions Issues
+- Check that all 4 secrets are set correctly
+- View workflow logs in Actions tab for error details
+- Ensure workflow file syntax is correct
 
 ### No Courses Found
-
-**Problem:** "No courses found" message
-
-**Solutions:**
-- ✅ Ensure you're actually enrolled in courses
-- ✅ Check if semester dates are active
-- ✅ Verify `MOODLE_BASE_URL` is correct for current semester
-- ✅ Try refreshing courses: delete `data/courses.json` and run again
-
-### Browser/Playwright Errors
-
-**Problem:** Playwright fails to launch browser
-
-**Solutions:**
-- ✅ Install system dependencies: `playwright install-deps chromium`
-- ✅ On Linux servers, ensure Xvfb or similar is available
-- ✅ Check if running as correct user with proper permissions
-- ✅ Try reinstalling: `playwright install --force chromium`
-
-### High Memory Usage
-
-**Problem:** Process uses too much memory
-
-**Solutions:**
-- ✅ Increase `check_interval_minutes` to reduce frequency
-- ✅ Enable database cleanup (reduce `database_cleanup_days`)
-- ✅ Run in `RUN_MODE=once` with cron instead of scheduled mode
-- ✅ Restart service periodically using systemd or supervisor
-
-### Database Locked Errors
-
-**Problem:** SQLite database locked
-
-**Solutions:**
-- ✅ Ensure only one instance is running
-- ✅ Check file permissions on `data/` directory
-- ✅ Delete `data/announcements.db` and let it recreate
+- Ensure you're enrolled in courses
+- Check if `MOODLE_BASE_URL` is correct for current semester
 
 ---
 
-## 📊 Monitoring & Logs
+## 🔒 Security
 
-### Log Files
-
-Logs are stored in `logs/app.log` with rotation:
-
-```bash
-# View recent logs
-tail -f logs/app.log
-
-# Search for errors
-grep "ERROR" logs/app.log
-
-# Check last check summary
-grep "Check Summary" logs/app.log | tail -1
-```
-
-### Database Inspection
-
-```bash
-# Open database
-sqlite3 data/announcements.db
-
-# View all courses
-SELECT * FROM courses;
-
-# View recent announcements
-SELECT * FROM announcements ORDER BY first_seen DESC LIMIT 10;
-
-# Count unnotified announcements
-SELECT COUNT(*) FROM announcements WHERE notified = 0;
-```
-
----
-
-## 🔒 Security Best Practices
-
-1. **Never commit `.env` file** - it contains sensitive credentials
-2. **Use App Passwords** for email instead of main account password
-3. **Keep dependencies updated**: `pip install -U -r requirements.txt`
-4. **Limit file permissions**: `chmod 600 .env`
-5. **Use environment variables** in production, not `.env` files
-6. **Enable 2FA** on your USM and email accounts
-7. **Monitor logs** for suspicious activity
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Add tests if applicable
-5. Commit: `git commit -am 'Add new feature'`
-6. Push: `git push origin feature-name`
-7. Open a Pull Request
-
----
-
-## 📝 Changelog
-
-### Version 2.0.0 (2025-01-15)
-- ✨ Added USM Identity SSO authentication with Playwright
-- ✨ Implemented session persistence and auto-reauthentication
-- ✨ Added SQLite database for robust announcement tracking
-- ✨ Course caching to reduce server load
-- ✨ Configurable selective monitoring via config.json
-- ✨ Enhanced email notifications with modern HTML design
-- ✨ Comprehensive logging system
-- ✨ Scheduled mode with automatic retry
-- ✨ Deployment guides for Render, Railway, and Docker
-
-### Version 1.0.0
-- Initial release with basic monitoring
-
----
-
-## ⚠️ Disclaimer
-
-This tool is for **personal educational use only**. Use responsibly and in accordance with:
-- Universiti Sains Malaysia's IT policies
-- Your email provider's terms of service
-- Applicable laws and regulations
-
-The authors are **not responsible** for:
-- Misuse or violations of university policies
-- Account suspension or termination
-- Any damages resulting from use of this software
-
-**Use at your own risk.**
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- Built for **Universiti Sains Malaysia** students
-- Powered by **Python**, **Playwright**, and **BeautifulSoup**
-- Inspired by the need for timely course communication
-- Special thanks to the open-source community
+- **Never commit `.env` file** - add it to `.gitignore`
+- **Use GitHub Secrets** for credentials in GitHub Actions
+- **Use App Passwords** for email, not your main password
+- **Keep dependencies updated**: `pip install -U -r requirements.txt`
 
 ---
 
 ## 📧 Support
 
-### Get Help:
+Having issues? 
 
-1. **Check [Troubleshooting](#-troubleshooting)** section
-2. **Review logs** in `logs/app.log`
-3. **Search [Issues](../../issues)** on GitHub
-4. **Open a [new issue](../../issues/new)** with:
-   - Error messages
-   - Log excerpts (remove sensitive data!)
-   - Environment details (OS, Python version)
-   - Steps to reproduce
-
-### Useful Commands:
-
-```bash
-# Check Python version
-python --version
-
-# Check installed packages
-pip list
-
-# Verify Playwright installation
-playwright --version
-
-# Test email settings
-python -c "import smtplib; print('SMTP available')"
-
-# Check environment variables
-python -c "from dotenv import load_dotenv; load_dotenv(); import os; print('USM_EMAIL:', bool(os.getenv('USM_EMAIL')))"
-```
+1. Check the [Troubleshooting](#-troubleshooting) section
+2. Review logs in `logs/app.log` (local) or Actions logs (GitHub Actions)
+3. [Open an issue](../../issues) on GitHub
 
 ---
 
@@ -694,6 +248,6 @@ python -c "from dotenv import load_dotenv; load_dotenv(); import os; print('USM_
 
 ⭐ **Star this repo if it helps you!** ⭐
 
-[Report Bug](../../issues) · [Request Feature](../../issues) · [Contribute](../../pulls)
+[Report Bug](../../issues) · [Request Feature](../../issues)
 
 </div>

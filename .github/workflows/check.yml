@@ -1,67 +1,66 @@
-name: Check USM eLearning Announcements
+name: USM eLearning Monitor
 
 on:
   schedule:
     # Run every 30 minutes
     - cron: '*/30 * * * *'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
-  check-announcements:
+  monitor:
     runs-on: ubuntu-latest
     container:
       image: mcr.microsoft.com/playwright/python:v1.55.0-jammy
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
       
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      
-      - name: Create data and logs directories
-        run: |
-          mkdir -p data
-          mkdir -p logs
-      
-      - name: Download previous announcements database
-        uses: dawidd6/action-download-artifact@v3
-        continue-on-error: true
-        with:
-          name: announcements-db
-          workflow: check.yml
-          path: data/
-      
-      - name: Check for new announcements
-        env:
-          USM_EMAIL: ${{ secrets.USM_EMAIL }}
-          USM_PASSWORD: ${{ secrets.USM_PASSWORD }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          SMTP_SERVER: ${{ secrets.SMTP_SERVER || 'smtp.gmail.com' }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
-          MOODLE_BASE_URL: ${{ secrets.MOODLE_BASE_URL || 'https://elearning.usm.my/sidang2526' }}
-          RUN_MODE: once
-          HEADLESS: true
-        run: python main.py
-      
-      - name: Upload announcements database (no session files)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: announcements-db
-          path: |
-            data/announcements.db
-            data/courses.json
-          retention-days: 90
-      
-      - name: Upload logs on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: monitor-logs
-          path: logs/
-          retention-days: 7
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Create data and logs directories
+      run: |
+        mkdir -p data logs
+    
+    - name: Download previous announcements database
+      uses: dawidd6/action-download-artifact@v3
+      continue-on-error: true
+      with:
+        name: announcements-db
+        workflow: check.yml
+        path: data/
+    
+    - name: Run monitor
+      env:
+        USM_EMAIL: ${{ secrets.USM_EMAIL }}
+        USM_PASSWORD: ${{ secrets.USM_PASSWORD }}
+        SMTP_USER: ${{ secrets.SMTP_USER }}
+        SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER || 'smtp.gmail.com' }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+        MOODLE_BASE_URL: ${{ secrets.MOODLE_BASE_URL || 'https://elearning.usm.my/sidang2526' }}
+        RUN_MODE: once
+        HEADLESS: true
+      run: python main.py
+    
+    - name: Save announcements database
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: announcements-db
+        path: |
+          data/announcements.db
+          data/courses.json
+        retention-days: 90
+    
+    - name: Upload logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: monitor-logs
+        path: logs/
+        retention-days: 7
 
