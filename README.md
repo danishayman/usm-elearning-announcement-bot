@@ -72,7 +72,6 @@ If using the same Gmail for both sending and receiving, create a filter to ensur
    - **From:** your_email@gmail.com
    - **To:** your_email@gmail.com
 3. Apply these actions:
-   - ✅ Star it
    - ✅ Mark as important
    - ✅ Never send it to Spam
    - ✅ Categorize as: Primary
