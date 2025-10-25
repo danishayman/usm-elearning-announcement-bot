@@ -50,11 +50,49 @@ SMTP_PASS=your_gmail_app_password
 
 #### 📧 Gmail Setup (App Password)
 
-Gmail requires an App Password for security:
+Gmail requires an App Password for security. Follow these steps:
 
-1. Enable [2-Factor Authentication](https://myaccount.google.com/security)
-2. Generate an [App Password](https://myaccount.google.com/apppasswords)
-3. Use the 16-character password as `SMTP_PASS`
+**Step 1: Enable 2-Step Verification**
+1. Go to [Google Account Security](https://myaccount.google.com/security)
+2. Scroll down to "How you sign in to Google"
+3. Click on "2-Step Verification"
+4. Follow the prompts to set it up (you'll need your phone)
+5. Complete the setup process
+
+**Step 2: Generate App Password**
+1. Once 2-Step Verification is enabled, go to [App Passwords](https://myaccount.google.com/apppasswords)
+2. You may need to sign in again
+3. Under "Select app", choose "Mail"
+4. Under "Select device", choose "Other (Custom name)"
+5. Type "USM eLearning Bot" or any name you prefer
+6. Click "Generate"
+7. Copy the 16-character password shown (format: `xxxx xxxx xxxx xxxx`)
+8. Use this password as your `SMTP_PASS` value (you can include or remove spaces)
+
+**💡 Important:** This App Password is different from your regular Gmail password and is specifically for third-party apps.
+
+#### 📬 Force Notifications for Self-Sent Mail (Optional)
+
+If you're using the **same Gmail account** for both sending and receiving notifications, Gmail might not notify you by default. Here's how to fix that:
+
+**Create a Gmail Filter:**
+1. Go to [Gmail](https://mail.google.com)
+2. Click the gear icon ⚙️ → **See all settings**
+3. Go to **Filters and Blocked Addresses** tab
+4. Click **Create a new filter**
+5. In the filter creation form:
+   - **From:** `your_email@gmail.com` (your Gmail address)
+   - **To:** `your_email@gmail.com` (same Gmail address)
+6. Click **Create filter**
+7. Check these options:
+   - ✅ **Mark as important**
+   - ✅ **Never send it to Spam**
+   - ✅ **Categorize as: Primary** (optional, but recommended)
+8. Click **Create filter**
+
+This ensures Gmail treats your bot's emails as important and sends you mobile/desktop notifications.
+
+**Alternative:** Use a different email address for receiving notifications to avoid this issue entirely.
 
 #### 3️⃣ Run the Monitor
 
@@ -90,7 +128,7 @@ Secrets keep your credentials secure in GitHub Actions.
 | `USM_EMAIL` | Your USM email | `student@student.usm.my` |
 | `USM_PASSWORD` | Your USM password | `YourPassword123` |
 | `SMTP_USER` | Your email for notifications | `yourname@gmail.com` |
-| `SMTP_PASS` | Gmail App Password | `abcd efgh ijkl mnop` |
+| `SMTP_PASS` | Gmail App Password (see setup below) | `abcd efgh ijkl mnop` |
 
 **How to add each secret:**
 - Click "New repository secret"
@@ -98,6 +136,39 @@ Secrets keep your credentials secure in GitHub Actions.
 - Enter the **Value** (your actual credential)
 - Click "Add secret"
 - Repeat for all 4 secrets
+
+#### 📧 Getting Your Gmail App Password
+
+Before adding the `SMTP_PASS` secret, you need to generate a Gmail App Password:
+
+**Step 1: Enable 2-Step Verification**
+1. Go to [Google Account Security](https://myaccount.google.com/security)
+2. Scroll down to "How you sign in to Google"
+3. Click on "2-Step Verification" and complete the setup
+
+**Step 2: Generate App Password**
+1. Go to [App Passwords](https://myaccount.google.com/apppasswords)
+2. Select "Mail" and "Other (Custom name)"
+3. Enter "USM eLearning Bot"
+4. Click "Generate"
+5. Copy the 16-character password
+6. Use this as your `SMTP_PASS` secret value
+
+#### 📬 Force Notifications for Self-Sent Mail (Optional)
+
+If using the same Gmail for both sending and receiving, create a filter to ensure notifications:
+
+1. Go to Gmail → Settings ⚙️ → **Filters and Blocked Addresses**
+2. **Create a new filter** with:
+   - **From:** your_email@gmail.com
+   - **To:** your_email@gmail.com
+3. Apply these actions:
+   - ✅ Star it
+   - ✅ Mark as important
+   - ✅ Never send it to Spam
+   - ✅ Categorize as: Primary
+
+This ensures you get notified for all announcements!
 
 #### 3️⃣ Enable GitHub Actions
 
