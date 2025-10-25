@@ -17,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       
       - name: Cache pip dependencies
         uses: actions/cache@v3
@@ -32,30 +32,43 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
-      - name: Create data directory
-        run: mkdir -p data
+      - name: Install Playwright browsers
+        run: |
+          playwright install chromium --with-deps
+      
+      - name: Create data and logs directories
+        run: |
+          mkdir -p data
+          mkdir -p logs
       
       - name: Restore previous announcements data
         uses: actions/cache@v3
         with:
-          path: data/
+          path: |
+            data/
+            logs/
           key: announcements-data-${{ github.run_id }}
           restore-keys: |
             announcements-data-
       
       - name: Check for new announcements
         env:
-          USERNAME: ${{ secrets.MOODLE_USERNAME }}
-          PASSWORD: ${{ secrets.MOODLE_PASSWORD }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-          EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          MOODLE_BASE_URL: ${{ secrets.MOODLE_BASE_URL }}
+          USM_EMAIL: ${{ secrets.USM_EMAIL }}
+          USM_PASSWORD: ${{ secrets.USM_PASSWORD }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER || 'smtp.gmail.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          MOODLE_BASE_URL: ${{ secrets.MOODLE_BASE_URL || 'https://elearning.usm.my/sidang2526' }}
+          RUN_MODE: once
+          HEADLESS: true
         run: python main.py
       
-      - name: Save announcements data
-        uses: actions/cache@v3
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
         with:
-          path: data/
-          key: announcements-data-${{ github.run_id }}
+          name: monitor-logs
+          path: logs/
+          retention-days: 7
 
