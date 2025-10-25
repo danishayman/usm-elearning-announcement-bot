@@ -61,15 +61,13 @@ jobs:
           mkdir -p data
           mkdir -p logs
       
-      - name: Restore previous announcements data
-        uses: actions/cache@v4
+      - name: Download previous announcements data
+        uses: dawidd6/action-download-artifact@v3
+        continue-on-error: true
         with:
-          path: |
-            data/
-            logs/
-          key: announcements-data-${{ github.run_id }}
-          restore-keys: |
-            announcements-data-
+          name: announcements-data
+          workflow: check.yml
+          path: .
       
       - name: Check for new announcements
         env:
@@ -83,6 +81,16 @@ jobs:
           RUN_MODE: once
           HEADLESS: true
         run: python main.py
+      
+      - name: Upload updated announcements data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: announcements-data
+          path: |
+            data/
+            logs/
+          retention-days: 90
       
       - name: Upload logs on failure
         if: failure()

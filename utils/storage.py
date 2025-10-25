@@ -64,6 +64,15 @@ class Database:
                 )
             """)
             
+            # Metadata table for tracking check times
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS metadata (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            
             # Create indexes for faster queries
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_announcements_course
@@ -73,6 +82,11 @@ class Database:
             cursor.execute("""
                 CREATE INDEX IF NOT EXISTS idx_announcements_notified
                 ON announcements(course_id, notified)
+            """)
+            
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_announcements_first_seen
+                ON announcements(first_seen)
             """)
             
             conn.commit()
@@ -279,6 +293,90 @@ class Database:
         
         if deleted > 0:
             logger.info(f"🗑️  Cleaned up {deleted} old announcement(s)")
+    
+    def get_last_check_time(self) -> Optional[datetime]:
+        """
+        Get the timestamp of the last check.
+        
+        Returns:
+            Datetime of last check, or None if never checked
+        """
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT value FROM metadata WHERE key = 'last_check_time'
+                """)
+                result = cursor.fetchone()
+                
+                if result:
+                    return datetime.fromisoformat(result[0])
+                return None
+        except Exception as e:
+            logger.debug(f"Error getting last check time: {e}")
+            return None
+    
+    def update_last_check_time(self, check_time: Optional[datetime] = None):
+        """
+        Update the last check timestamp.
+        
+        Args:
+            check_time: Datetime to record (defaults to now)
+        """
+        if check_time is None:
+            check_time = datetime.now()
+        
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO metadata (key, value, updated_at)
+                VALUES ('last_check_time', ?, ?)
+            """, (check_time.isoformat(), datetime.now()))
+            conn.commit()
+        
+        logger.debug(f"Updated last check time to {check_time}")
+    
+    def get_recent_new_announcements(
+        self,
+        course_id: str,
+        since: datetime
+    ) -> List[Dict]:
+        """
+        Get new announcements for a course that appeared since a given time.
+        
+        Args:
+            course_id: Course identifier
+            since: Only return announcements first seen after this time
+            
+        Returns:
+            List of announcement dictionaries
+        """
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, course_id, title, url, preview, author, date, first_seen, notified
+                FROM announcements
+                WHERE course_id = ?
+                AND first_seen >= ?
+                AND notified = 0
+                ORDER BY first_seen DESC
+            """, (course_id, since.isoformat()))
+            
+            announcements = []
+            for row in cursor.fetchall():
+                announcements.append({
+                    'id': row[0],
+                    'course_id': row[1],
+                    'title': row[2],
+                    'url': row[3],
+                    'preview': row[4],
+                    'author': row[5],
+                    'date': row[6],
+                    'first_seen': row[7],
+                    'notified': row[8]
+                })
+            
+            return announcements
 
 
 class CourseCache:

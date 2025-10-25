@@ -7,7 +7,7 @@ import os
 import logging
 import requests
 from typing import List, Optional, Dict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from login import USMLoginManager
 from utils.parser import MoodleParser, Course, Announcement
@@ -263,10 +263,20 @@ class ELearningMonitor:
         Returns:
             Statistics dictionary
         """
+        check_start_time = datetime.now()
+        
         logger.info("=" * 70)
         logger.info("🎓 USM eLearning Monitor - Check Starting")
         logger.info("=" * 70)
-        logger.info(f"⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(f"⏰ {check_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Get last check time for filtering
+        last_check_time = self.db.get_last_check_time()
+        if last_check_time:
+            time_since_last = (check_start_time - last_check_time).total_seconds() / 60
+            logger.info(f"📅 Last check: {last_check_time.strftime('%Y-%m-%d %H:%M:%S')} ({time_since_last:.1f} min ago)")
+        else:
+            logger.info(f"📅 First check - will record all announcements but only notify for recent ones")
         
         stats = {
             'total_courses': 0,
@@ -274,7 +284,8 @@ class ELearningMonitor:
             'courses_with_new': 0,
             'total_new_announcements': 0,
             'success': True,
-            'errors': []
+            'errors': [],
+            'last_check_time': last_check_time.isoformat() if last_check_time else None
         }
         
         try:
@@ -315,6 +326,18 @@ class ELearningMonitor:
             # Step 4: Check each course
             logger.info("\n🔍 Checking courses for announcements...\n")
             
+            # Calculate time window for notifications
+            # On first run, use a 60 minute window to avoid spamming with old announcements
+            # On subsequent runs, use time since last check + buffer
+            if last_check_time:
+                # Add 5 minute buffer to account for processing time
+                notification_window_start = last_check_time - timedelta(minutes=5)
+            else:
+                # First run: only notify for very recent announcements (last hour)
+                notification_window_start = check_start_time - timedelta(minutes=60)
+            
+            logger.info(f"📬 Will notify for announcements first seen after: {notification_window_start.strftime('%Y-%m-%d %H:%M:%S')}\n")
+            
             for course in monitored_courses:
                 new_announcements = self.check_course_announcements(course)
                 
@@ -322,18 +345,28 @@ class ELearningMonitor:
                     stats['courses_with_new'] += 1
                     stats['total_new_announcements'] += len(new_announcements)
                     
-                    # Send notification if enabled
-                    if self.config.get_notification_settings().get('send_email'):
-                        announcement_dicts = [ann.to_dict() for ann in new_announcements]
-                        success = self.notifier.send_notification(
-                            course.name,
-                            announcement_dicts
-                        )
+                    # Filter announcements to only those within notification window
+                    recent_announcements = self.db.get_recent_new_announcements(
+                        course.id,
+                        notification_window_start
+                    )
+                    
+                    if recent_announcements:
+                        logger.info(f"   📧 {len(recent_announcements)} announcement(s) within notification window")
                         
-                        if success:
-                            # Mark as notified
-                            urls = [ann.url for ann in new_announcements]
-                            self.db.mark_as_notified(course.id, urls)
+                        # Send notification if enabled
+                        if self.config.get_notification_settings().get('send_email'):
+                            success = self.notifier.send_notification(
+                                course.name,
+                                recent_announcements
+                            )
+                            
+                            if success:
+                                # Mark as notified
+                                urls = [ann['url'] for ann in recent_announcements]
+                                self.db.mark_as_notified(course.id, urls)
+                    else:
+                        logger.info(f"   ℹ️  New announcements found but outside notification window (recorded only)")
             
             # Step 5: Print summary
             logger.info("\n" + "=" * 70)
@@ -351,6 +384,9 @@ class ELearningMonitor:
             logger.info(f"   Unnotified: {db_stats['unnotified_announcements']}")
             
             logger.info("\n✅ Check complete!")
+            
+            # Update last check time
+            self.db.update_last_check_time(check_start_time)
             
             # Cleanup old announcements periodically
             cleanup_days = self.config.load_config().get('database_cleanup_days', 90)
