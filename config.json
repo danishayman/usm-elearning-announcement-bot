@@ -5,7 +5,8 @@
   "check_interval_minutes": 30,
   "notification_settings": {
     "send_email": true,
-    "send_error_alerts": true
+    "send_error_alerts": true,
+    "fetch_full_content": true
   },
   "database_cleanup_days": 90
 }

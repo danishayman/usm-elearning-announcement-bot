@@ -202,13 +202,15 @@ class ELearningMonitor:
     
     def check_course_announcements(
         self,
-        course: Course
+        course: Course,
+        fetch_full_content: bool = True
     ) -> List[Announcement]:
         """
         Check a single course for announcements.
         
         Args:
             course: Course to check
+            fetch_full_content: Whether to fetch full announcement content
             
         Returns:
             List of new announcements
@@ -249,6 +251,19 @@ class ELearningMonitor:
             
             if new_announcements:
                 logger.info(f"   🆕 {len(new_announcements)} new announcement(s)!")
+                
+                # Fetch full content for new announcements if requested
+                if fetch_full_content:
+                    logger.info(f"   📄 Fetching full content for new announcements...")
+                    for announcement in new_announcements:
+                        try:
+                            response = self.session.get(announcement.url, timeout=30)
+                            response.raise_for_status()
+                            full_content = self.parser.extract_announcement_content(response.text)
+                            if full_content and len(full_content) > len(announcement.preview):
+                                announcement.preview = full_content
+                        except Exception as e:
+                            logger.debug(f"   Could not fetch full content for {announcement.title}: {e}")
                 
                 # Save new announcements to database
                 self.db.save_announcements(course.id, new_announcements)
@@ -346,8 +361,11 @@ class ELearningMonitor:
             
             logger.info(f"📬 Will notify for announcements first seen after: {notification_window_start.strftime('%Y-%m-%d %H:%M:%S')}\n")
             
+            # Get configuration for full content fetching
+            fetch_full_content = self.config.get_notification_settings().get('fetch_full_content', True)
+            
             for course in monitored_courses:
-                new_announcements = self.check_course_announcements(course)
+                new_announcements = self.check_course_announcements(course, fetch_full_content)
                 
                 if new_announcements:
                     stats['courses_with_new'] += 1

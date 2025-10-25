@@ -17,9 +17,11 @@ Advanced automated monitoring system for Universiti Sains Malaysia's eLearning p
 - **Course Exclusion**: Exclude specific courses you don't want to track
 
 ### 📬 **Advanced Notifications**
-- **Beautiful HTML Emails**: Modern, responsive email design
-- **Rich Content**: Includes announcement titles, previews, authors, and dates
-- **Direct Links**: Click straight through to read full announcements
+- **Beautiful HTML Emails**: Modern, responsive email design with enhanced styling
+- **Full Announcement Content**: Automatically fetches and includes complete announcement text in emails
+- **Rich Metadata**: Displays announcement titles, authors, dates, and course information
+- **Direct Links**: Click straight through to read announcements on eLearning portal
+- **Plain Text Fallback**: Email clients without HTML support get well-formatted plain text
 - **Error Alerts**: Get notified if the monitor encounters issues
 
 ### 💾 **Robust Data Management**
@@ -154,8 +156,10 @@ Edit `config.json` to customize monitoring behavior:
 - `monitored_course_ids`: Array of course IDs to monitor (when `monitor_all_courses` is `false`)
 - `excluded_course_ids`: Array of course IDs to exclude from monitoring
 - `check_interval_minutes`: How often to check (in minutes)
-- `send_email`: Enable/disable email notifications
-- `send_error_alerts`: Get notified about system errors
+- `notification_settings`:
+  - `send_email`: Enable/disable email notifications
+  - `send_error_alerts`: Get notified about system errors
+  - `fetch_full_content`: Fetch full announcement content for emails (default: true)
 - `database_cleanup_days`: Remove announcements older than X days
 
 ### 4️⃣ Run the Monitor

@@ -351,22 +351,68 @@ class MoodleParser:
         """
         soup = BeautifulSoup(html, 'html.parser')
         
-        # Look for the post content
+        # Strategy 1: Look for the first post/forum post content
         content_containers = soup.find_all(['div', 'article'], class_=re.compile(
-            r'post|forumpost|posting|content|message'
+            r'post|forumpost|posting|discussion|firstpost'
         ))
         
         for container in content_containers:
-            # Try to find the actual content text
-            text_elem = container.find('div', class_=re.compile(r'post-content|content-text|message|text'))
+            # Try to find the actual content text with multiple selectors
+            text_elem = container.find('div', class_=re.compile(
+                r'post-content-container|post_content|content-text|message|posting-content|post-body|no-overflow'
+            ))
+            
+            if not text_elem:
+                # Fallback: look for generic content divs
+                text_elem = container.find('div', class_=re.compile(r'content'))
+            
             if text_elem:
-                # Remove any nested reply containers
-                for reply in text_elem.find_all('div', class_=re.compile(r'reply|responses')):
-                    reply.decompose()
+                # Remove unwanted nested elements
+                for unwanted in text_elem.find_all(['div', 'span'], class_=re.compile(
+                    r'reply|responses|attachments|commands|rating|footer|controls|author'
+                )):
+                    unwanted.decompose()
                 
-                text = text_elem.get_text(strip=True)
-                if len(text) > 20:  # Ensure it's substantial content
-                    return text[:500]  # Limit preview length
+                # Remove any script or style tags
+                for script in text_elem.find_all(['script', 'style']):
+                    script.decompose()
+                
+                # Get text with better formatting
+                text = text_elem.get_text(separator='\n', strip=True)
+                
+                # Clean up excessive whitespace
+                lines = [line.strip() for line in text.split('\n') if line.strip()]
+                text = '\n'.join(lines)
+                
+                if len(text) > 30:  # Ensure it's substantial content
+                    return text[:2000]  # Increased limit for full content
+        
+        # Strategy 2: Look for any div with role="main" or similar
+        main_content = soup.find('div', {'role': 'main'})
+        if main_content:
+            # Remove navigation and footer elements
+            for nav in main_content.find_all(['nav', 'footer', 'header']):
+                nav.decompose()
+            
+            text = main_content.get_text(separator='\n', strip=True)
+            lines = [line.strip() for line in text.split('\n') if line.strip()]
+            text = '\n'.join(lines)
+            
+            if len(text) > 30:
+                return text[:2000]
+        
+        # Strategy 3: Fallback to finding any substantial text block
+        all_paragraphs = soup.find_all('p')
+        if all_paragraphs:
+            text_parts = []
+            for p in all_paragraphs[:10]:  # Limit to first 10 paragraphs
+                p_text = p.get_text(strip=True)
+                if len(p_text) > 20:
+                    text_parts.append(p_text)
+            
+            if text_parts:
+                text = '\n\n'.join(text_parts)
+                return text[:2000]
         
         return ""
 

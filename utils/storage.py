@@ -490,7 +490,8 @@ class ConfigManager:
                 "check_interval_minutes": 30,
                 "notification_settings": {
                     "send_email": True,
-                    "send_error_alerts": True
+                    "send_error_alerts": True,
+                    "fetch_full_content": True
                 },
                 "database_cleanup_days": 90
             }

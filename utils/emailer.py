@@ -124,19 +124,28 @@ class EmailNotifier:
             body += f"{i}. {announcement['title']}\n"
             body += f"   🔗 {announcement['url']}\n"
             
-            if announcement.get('preview'):
-                preview = announcement['preview'][:150]
-                body += f"   📝 {preview}{'...' if len(announcement.get('preview', '')) > 150 else ''}\n"
-            
             if announcement.get('author'):
-                body += f"   👤 {announcement['author']}\n"
+                body += f"   👤 Author: {announcement['author']}\n"
             
             if announcement.get('date'):
-                body += f"   📅 {announcement['date']}\n"
+                body += f"   📅 Posted: {announcement['date']}\n"
             
-            body += "\n"
+            if announcement.get('preview'):
+                body += f"\n   📝 Content:\n"
+                # Wrap long text for better readability
+                preview = announcement['preview']
+                words = preview.split()
+                line = "   "
+                for word in words:
+                    if len(line) + len(word) + 1 > 70:
+                        body += line + "\n"
+                        line = "   " + word + " "
+                    else:
+                        line += word + " "
+                body += line.strip() + "\n"
+            
+            body += "\n" + "-" * 70 + "\n\n"
         
-        body += "-" * 70 + "\n"
         body += f"Checked at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
         body += "USM eLearning Monitoring Bot\n"
         
@@ -164,102 +173,161 @@ class EmailNotifier:
             padding: 20px;
         }}
         .container {{
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
             background-color: white;
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }}
         .header {{
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px 20px;
+            padding: 35px 25px;
             text-align: center;
         }}
         .header h1 {{
             margin: 0 0 10px 0;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 600;
         }}
         .header p {{
             margin: 0;
-            font-size: 16px;
+            font-size: 17px;
             opacity: 0.95;
+            font-weight: 500;
         }}
         .content {{
-            padding: 30px 20px;
+            padding: 30px 25px;
         }}
         .announcement {{
             background-color: #f9fafb;
-            border-left: 4px solid #667eea;
-            border-radius: 6px;
-            padding: 20px;
-            margin-bottom: 20px;
-            transition: transform 0.2s;
+            border-left: 5px solid #667eea;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }}
-        .announcement:hover {{
-            transform: translateX(4px);
+        .announcement-number {{
+            display: inline-block;
+            background-color: #667eea;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-bottom: 10px;
         }}
         .announcement-title {{
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 600;
             color: #1f2937;
-            margin: 0 0 12px 0;
-        }}
-        .announcement-preview {{
-            color: #6b7280;
-            font-size: 14px;
-            line-height: 1.6;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: white;
-            border-radius: 4px;
-        }}
-        .announcement-link {{
-            display: inline-block;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-            margin-top: 10px;
-            padding: 8px 16px;
-            background-color: #e0e7ff;
-            border-radius: 4px;
-            transition: background-color 0.2s;
-        }}
-        .announcement-link:hover {{
-            background-color: #c7d2fe;
+            margin: 8px 0 16px 0;
+            line-height: 1.4;
         }}
         .announcement-meta {{
             display: flex;
-            gap: 15px;
+            gap: 20px;
             flex-wrap: wrap;
-            font-size: 13px;
+            font-size: 14px;
             color: #6b7280;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #e5e7eb;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
         }}
         .meta-item {{
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+            font-weight: 500;
+        }}
+        .meta-item-icon {{
+            font-size: 16px;
+        }}
+        .announcement-content {{
+            background-color: white;
+            padding: 18px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            margin: 16px 0;
+        }}
+        .content-label {{
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #667eea;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }}
+        .content-text {{
+            color: #374151;
+            font-size: 15px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }}
+        .announcement-link {{
+            display: inline-block;
+            color: white;
+            background-color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 16px;
+            padding: 12px 24px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }}
+        .announcement-link:hover {{
+            background-color: #5568d3;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+            transform: translateY(-1px);
         }}
         .footer {{
             background-color: #f9fafb;
             text-align: center;
-            padding: 20px;
+            padding: 24px;
             font-size: 13px;
             color: #6b7280;
             border-top: 1px solid #e5e7eb;
         }}
+        .footer-time {{
+            font-weight: 500;
+            color: #4b5563;
+            margin-bottom: 8px;
+        }}
         .footer-links {{
-            margin-top: 10px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
         }}
         .footer-links a {{
             color: #667eea;
             text-decoration: none;
-            margin: 0 10px;
+            margin: 0 12px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }}
+        .footer-links a:hover {{
+            color: #5568d3;
+            text-decoration: underline;
+        }}
+        @media only screen and (max-width: 600px) {{
+            .container {{
+                border-radius: 0;
+                margin: 0;
+            }}
+            .content {{
+                padding: 20px 15px;
+            }}
+            .announcement {{
+                padding: 18px;
+            }}
+            .announcement-meta {{
+                flex-direction: column;
+                gap: 8px;
+            }}
         }}
     </style>
 </head>
@@ -275,29 +343,24 @@ class EmailNotifier:
         for i, announcement in enumerate(announcements, 1):
             html += f"""
             <div class="announcement">
+                <span class="announcement-number">#{i}</span>
                 <div class="announcement-title">{announcement['title']}</div>
-"""
-            
-            if announcement.get('preview'):
-                preview = announcement['preview'][:200]
-                html += f"""
-                <div class="announcement-preview">
-                    {preview}{'...' if len(announcement.get('preview', '')) > 200 else ''}
-                </div>
-"""
-            
-            html += f"""
-                <a href="{announcement['url']}" class="announcement-link">
-                    📖 View Full Announcement →
-                </a>
 """
             
             # Add metadata if available
             meta_items = []
             if announcement.get('author'):
-                meta_items.append(f'<span class="meta-item">👤 {announcement["author"]}</span>')
+                meta_items.append(f'''
+                    <div class="meta-item">
+                        <span class="meta-item-icon">👤</span>
+                        <span>{announcement["author"]}</span>
+                    </div>''')
             if announcement.get('date'):
-                meta_items.append(f'<span class="meta-item">📅 {announcement["date"]}</span>')
+                meta_items.append(f'''
+                    <div class="meta-item">
+                        <span class="meta-item-icon">📅</span>
+                        <span>{announcement["date"]}</span>
+                    </div>''')
             
             if meta_items:
                 html += f"""
@@ -306,18 +369,32 @@ class EmailNotifier:
                 </div>
 """
             
-            html += """
+            # Add full content if available
+            if announcement.get('preview'):
+                # Escape HTML and preserve line breaks
+                content = announcement['preview'].replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                html += f"""
+                <div class="announcement-content">
+                    <div class="content-label">📝 Announcement Content</div>
+                    <div class="content-text">{content}</div>
+                </div>
+"""
+            
+            html += f"""
+                <a href="{announcement['url']}" class="announcement-link">
+                    📖 View Full Announcement →
+                </a>
             </div>
 """
         
         html += f"""
         </div>
         <div class="footer">
-            <p>⏰ Checked at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <p class="footer-time">⏰ Checked at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
             <p>🤖 USM eLearning Monitoring Bot</p>
             <div class="footer-links">
-                <a href="https://elearning.usm.my/sidang2526/my/">Dashboard</a>
-                <a href="https://elearning.usm.my/sidang2526/">eLearning Portal</a>
+                <a href="https://elearning.usm.my/sidang2526/my/">📊 Dashboard</a>
+                <a href="https://elearning.usm.my/sidang2526/">🎓 eLearning Portal</a>
             </div>
         </div>
     </div>
