@@ -10,7 +10,7 @@ jobs:
   check-announcements:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright/python:v1.40.0-jammy
+      image: mcr.microsoft.com/playwright/python:v1.55.0-jammy
     
     steps:
       - name: Checkout repository
