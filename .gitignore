@@ -1,7 +1,10 @@
-# Environment variables
+# Environment variables (SECURITY: Contains credentials!)
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+.env.test
 
 # Python
 __pycache__/
@@ -34,13 +37,17 @@ ENV/
 env/
 .venv
 
-# Data files
+# Data files (SECURITY: Never commit these!)
+# Contains sensitive data including:
+# - session.json: Authentication cookies (if any exist)
+# - announcements.db: Database with announcement history
+# - courses.json: Course cache
 data/
 !data/.gitkeep
 *.db
 *.db-journal
 *.json
-!config.json
+!config.json  # Config is safe to commit (no secrets)
 
 # Logs
 logs/

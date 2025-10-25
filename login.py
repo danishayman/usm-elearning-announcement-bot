@@ -1,10 +1,10 @@
 """
 Login automation for USM Identity (ADFS) using Playwright.
 
-Handles SSO authentication flow with session persistence and automatic reauthentication.
+Handles SSO authentication flow without session persistence for enhanced security.
+Every authentication is performed fresh to prevent session hijacking.
 """
 import os
-import json
 import time
 import logging
 from typing import Optional, Dict
@@ -14,14 +14,13 @@ logger = logging.getLogger(__name__)
 
 
 class USMLoginManager:
-    """Manages USM Identity SSO login and session persistence."""
+    """Manages USM Identity SSO login without session persistence for enhanced security."""
     
     def __init__(
         self, 
         email: str, 
         password: str, 
-        headless: bool = True,
-        session_file: str = "data/session.json"
+        headless: bool = True
     ):
         """
         Initialize login manager.
@@ -30,19 +29,14 @@ class USMLoginManager:
             email: USM email/username
             password: USM password
             headless: Run browser in headless mode (default: True)
-            session_file: Path to store session cookies
         """
         self.email = email
         self.password = password
         self.headless = headless
-        self.session_file = session_file
         self.cookies = None
         self.playwright = None
         self.browser = None
         self.context = None
-        
-        # Ensure data directory exists
-        os.makedirs(os.path.dirname(session_file), exist_ok=True)
     
     def __enter__(self):
         """Context manager entry."""
@@ -63,37 +57,6 @@ class USMLoginManager:
                 self.playwright.stop()
         except Exception as e:
             logger.debug(f"Cleanup error: {e}")
-    
-    def load_session(self) -> bool:
-        """
-        Load saved session cookies from file.
-        
-        Returns:
-            True if session loaded successfully
-        """
-        try:
-            if os.path.exists(self.session_file):
-                with open(self.session_file, 'r') as f:
-                    self.cookies = json.load(f)
-                logger.info("✅ Loaded saved session")
-                return True
-        except Exception as e:
-            logger.debug(f"Could not load session: {e}")
-        return False
-    
-    def save_session(self, cookies: list):
-        """
-        Save session cookies to file.
-        
-        Args:
-            cookies: List of cookie dictionaries from browser context
-        """
-        try:
-            with open(self.session_file, 'w') as f:
-                json.dump(cookies, f, indent=2)
-            logger.info("💾 Session saved")
-        except Exception as e:
-            logger.error(f"Failed to save session: {e}")
     
     def is_logged_in(self, page: Page) -> bool:
         """
@@ -121,7 +84,7 @@ class USMLoginManager:
             if any(indicator in content.lower() for indicator in [
                 'dashboard', 'logout', 'my courses', 'kursus saya'
             ]):
-                logger.info("✅ Already logged in (session valid)")
+                logger.info("✅ Login successful - verified access")
                 return True
                 
         except Exception as e:
@@ -296,9 +259,8 @@ class USMLoginManager:
             if self.is_logged_in(page):
                 logger.info("✅ Login successful!")
                 
-                # Save session cookies
+                # Store cookies in memory (not persisted to disk for security)
                 cookies = self.context.cookies()
-                self.save_session(cookies)
                 self.cookies = cookies
                 
                 return True
@@ -325,42 +287,20 @@ class USMLoginManager:
     
     def get_authenticated_session(self, force_reauth: bool = False) -> Optional[Dict[str, str]]:
         """
-        Get authenticated session cookies, reusing saved session if valid.
+        Get authenticated session cookies by performing fresh login.
+        
+        Note: Session persistence has been disabled for security.
+        Every call performs a fresh authentication.
         
         Args:
-            force_reauth: Force reauthentication even if session exists
+            force_reauth: Ignored (kept for API compatibility)
             
         Returns:
             Dictionary of cookies for requests session, or None if auth failed
         """
-        # Try to use existing session first
-        if not force_reauth and self.load_session():
-            # Verify session is still valid
-            try:
-                self.playwright = sync_playwright().start()
-                self.browser = self.playwright.chromium.launch(headless=self.headless)
-                self.context = self.browser.new_context()
-                
-                # Add saved cookies
-                if self.cookies:
-                    self.context.add_cookies(self.cookies)
-                
-                page = self.context.new_page()
-                
-                if self.is_logged_in(page):
-                    # Session is valid, convert cookies to dict
-                    cookie_dict = {cookie['name']: cookie['value'] for cookie in self.cookies}
-                    self.cleanup()
-                    return cookie_dict
-                else:
-                    logger.info("⚠️  Saved session expired, reauthenticating...")
-                    self.cleanup()
-                    
-            except Exception as e:
-                logger.debug(f"Session validation error: {e}")
-                self.cleanup()
+        logger.info("🔐 Performing fresh authentication (no session persistence)")
         
-        # Need to login
+        # Always perform fresh login (no session caching)
         if self.perform_sso_login():
             # Convert cookies to dict for requests
             cookie_dict = {cookie['name']: cookie['value'] for cookie in self.cookies}

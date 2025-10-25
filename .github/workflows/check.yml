@@ -26,13 +26,13 @@ jobs:
           mkdir -p data
           mkdir -p logs
       
-      - name: Download previous announcements data
+      - name: Download previous announcements database
         uses: dawidd6/action-download-artifact@v3
         continue-on-error: true
         with:
-          name: announcements-data
+          name: announcements-db
           workflow: check.yml
-          path: .
+          path: data/
       
       - name: Check for new announcements
         env:
@@ -47,14 +47,14 @@ jobs:
           HEADLESS: true
         run: python main.py
       
-      - name: Upload updated announcements data
+      - name: Upload announcements database (no session files)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: announcements-data
+          name: announcements-db
           path: |
-            data/
-            logs/
+            data/announcements.db
+            data/courses.json
           retention-days: 90
       
       - name: Upload logs on failure

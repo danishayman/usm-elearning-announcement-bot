@@ -69,20 +69,24 @@ class ELearningMonitor:
         """
         Authenticate with USM Identity SSO.
         
+        Note: Session persistence is disabled for security.
+        Every authentication performs a fresh login.
+        
         Args:
-            force: Force reauthentication even if session exists
+            force: Ignored (kept for API compatibility)
             
         Returns:
             True if authentication successful
         """
         try:
-            logger.info("🔐 Authenticating with USM Identity...")
+            logger.info("🔐 Authenticating with USM Identity (fresh login)...")
             
             with USMLoginManager(
                 self.usm_email,
                 self.usm_password,
                 headless=self.headless
             ) as login_mgr:
+                # Always performs fresh authentication (no session caching)
                 cookies = login_mgr.get_authenticated_session(force_reauth=force)
                 
                 if cookies:
@@ -136,13 +140,17 @@ class ELearningMonitor:
         """
         Ensure we have a valid authenticated session, reauthenticating if needed.
         
+        Note: With session persistence disabled, this will check if we're already
+        authenticated in this run, but will not reuse sessions across runs.
+        
         Returns:
             True if we have a valid session
         """
         if self.logged_in and self.check_session_valid():
+            logger.debug("Session still valid from current run")
             return True
         
-        logger.info("🔄 Reauthenticating...")
+        logger.info("🔄 Authenticating (session expired or first auth)...")
         return self.authenticate(force=True)
     
     def fetch_courses(self, use_cache: bool = True) -> List[Course]:
