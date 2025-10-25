@@ -357,7 +357,7 @@ class ELearningMonitor:
                 notification_window_start = last_check_time - timedelta(minutes=5)
             else:
                 # First run: only notify for very recent announcements (last hour)
-                notification_window_start = check_start_time - timedelta(minutes=1440)
+                notification_window_start = check_start_time - timedelta(minutes=60)
             
             logger.info(f"📬 Will notify for announcements first seen after: {notification_window_start.strftime('%Y-%m-%d %H:%M:%S')}\n")
             
