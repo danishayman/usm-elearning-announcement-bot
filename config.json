@@ -1,0 +1,12 @@
+{
+  "monitor_all_courses": true,
+  "monitored_course_ids": [],
+  "excluded_course_ids": [],
+  "check_interval_minutes": 30,
+  "notification_settings": {
+    "send_email": true,
+    "send_error_alerts": true
+  },
+  "database_cleanup_days": 90
+}
+
