@@ -2,6 +2,8 @@
 
 Advanced automated monitoring system for Universiti Sains Malaysia's eLearning portal. Automatically detects new course announcements and sends instant email notifications with smart SSO authentication, course caching, and configurable monitoring rules.
 
+> **⚡ Quick Setup:** Only **4 environment variables** required! Everything else has sensible defaults.
+
 ## ✨ Features
 
 ### 🔒 **Smart Authentication**
@@ -50,6 +52,13 @@ Advanced automated monitoring system for Universiti Sains Malaysia's eLearning p
 - **Email account** (Gmail recommended) for sending notifications
 - **2-5 MB disk space** for dependencies and data
 
+### 🎯 Setup Summary
+```
+1. Install: pip install -r requirements.txt && playwright install chromium
+2. Configure: Copy .env.example to .env, add 4 credentials
+3. Run: python main.py
+```
+
 ---
 
 ## 🚀 Quick Start
@@ -68,26 +77,43 @@ pip install -r requirements.txt
 playwright install chromium
 ```
 
-### 2️⃣ Configure Environment
+### 2️⃣ Configure (Only 4 Settings Required!)
 
-Create a `.env` file in the project root:
+```bash
+# Copy the example file
+cp .env.example .env
+```
+
+Then edit `.env` and add **only these 4 credentials**:
 
 ```env
-# USM eLearning Login Credentials
 USM_EMAIL=your_email@student.usm.my
 USM_PASSWORD=your_usm_password
-
-# Email Notification Settings (Gmail example)
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_gmail_app_password
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-
-# Optional: Advanced Settings
-MOODLE_BASE_URL=https://elearning.usm.my/sidang2526
-RUN_MODE=scheduled
-HEADLESS=true
 ```
+
+**That's it!** 🎉 Everything else uses smart defaults:
+- ✅ Gmail SMTP (`smtp.gmail.com:587`)
+- ✅ Current semester URL (`https://elearning.usm.my/sidang2526`)
+- ✅ 30-minute check interval
+- ✅ Headless browser mode
+- ✅ Email notifications enabled
+
+<details>
+<summary><b>📝 Need to customize?</b> (click to expand)</summary>
+
+Override any defaults in your `.env`:
+```env
+SMTP_SERVER=smtp.gmail.com          # Change for non-Gmail
+SMTP_PORT=587                       # 465 for SSL, 587 for TLS
+MOODLE_BASE_URL=https://elearning.usm.my/sidang2526
+RUN_MODE=scheduled                  # or 'once' for single check
+HEADLESS=true                       # false to see browser
+```
+
+All options are in `.env.example`
+</details>
 
 #### 📧 **Gmail Setup (App Password)**
 
@@ -132,37 +158,7 @@ SMTP_PORT=587  # or 465 for SSL
 ```
 </details>
 
-### 3️⃣ Configure Monitoring
-
-Edit `config.json` to customize monitoring behavior:
-
-```json
-{
-  "monitor_all_courses": true,
-  "monitored_course_ids": [],
-  "excluded_course_ids": ["12345", "67890"],
-  "check_interval_minutes": 30,
-  "notification_settings": {
-    "send_email": true,
-    "send_error_alerts": true
-  },
-  "database_cleanup_days": 90
-}
-```
-
-**Configuration Options:**
-
-- `monitor_all_courses`: `true` = monitor all courses, `false` = only monitor listed courses
-- `monitored_course_ids`: Array of course IDs to monitor (when `monitor_all_courses` is `false`)
-- `excluded_course_ids`: Array of course IDs to exclude from monitoring
-- `check_interval_minutes`: How often to check (in minutes)
-- `notification_settings`:
-  - `send_email`: Enable/disable email notifications
-  - `send_error_alerts`: Get notified about system errors
-  - `fetch_full_content`: Fetch full announcement content for emails (default: true)
-- `database_cleanup_days`: Remove announcements older than X days
-
-### 4️⃣ Run the Monitor
+### 3️⃣ Run the Monitor
 
 ```bash
 # Run in scheduled mode (continuous monitoring)
@@ -204,6 +200,64 @@ usm-elearning-monitor/
 
 ---
 
+## ⚙️ Advanced Configuration
+
+The defaults work great for most users, but you can customize behavior via `config.json`:
+
+```json
+{
+  "monitor_all_courses": true,
+  "monitored_course_ids": [],
+  "excluded_course_ids": [],
+  "check_interval_minutes": 30,
+  "notification_settings": {
+    "send_email": true,
+    "send_error_alerts": true,
+    "fetch_full_content": true
+  },
+  "database_cleanup_days": 90
+}
+```
+
+### Configuration Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `monitor_all_courses` | `true` | Monitor all enrolled courses |
+| `monitored_course_ids` | `[]` | Specific course IDs to monitor (when `monitor_all_courses` is `false`) |
+| `excluded_course_ids` | `[]` | Course IDs to exclude from monitoring |
+| `check_interval_minutes` | `30` | How often to check for new announcements |
+| `send_email` | `true` | Enable email notifications |
+| `send_error_alerts` | `true` | Get notified about system errors |
+| `fetch_full_content` | `true` | Include full announcement text in emails |
+| `database_cleanup_days` | `90` | Remove announcements older than X days |
+
+### Finding Course IDs
+
+To exclude specific courses or set up selective monitoring:
+
+1. Run the monitor once: `python main.py`
+2. Check `data/courses.json` for all course IDs
+3. Add IDs to `config.json` as needed
+
+**Example - Exclude specific courses:**
+```json
+{
+  "monitor_all_courses": true,
+  "excluded_course_ids": ["12345", "67890"]
+}
+```
+
+**Example - Monitor only specific courses:**
+```json
+{
+  "monitor_all_courses": false,
+  "monitored_course_ids": ["11111", "22222", "33333"]
+}
+```
+
+---
+
 ## 🐳 Deployment
 
 ### **Render.com** (Recommended)
@@ -227,15 +281,17 @@ Render.com offers free hosting with persistent storage.
    Start Command: python main.py
    ```
 
-4. **Add Environment Variables** in Render dashboard:
-   - `USM_EMAIL`
-   - `USM_PASSWORD`
-   - `SMTP_USER`
-   - `SMTP_PASS`
-   - `SMTP_SERVER`
-   - `SMTP_PORT`
-   - `RUN_MODE=scheduled`
-   - `HEADLESS=true`
+4. **Add Environment Variables** in Render dashboard (only 4 required!):
+   - `USM_EMAIL` (your USM email)
+   - `USM_PASSWORD` (your USM password)
+   - `SMTP_USER` (your email for notifications)
+   - `SMTP_PASS` (your email app password)
+   
+   Optional (defaults work for most users):
+   - `SMTP_SERVER=smtp.gmail.com` (only if not using Gmail)
+   - `SMTP_PORT=587` (only if using different port)
+   - `RUN_MODE=scheduled` (already default)
+   - `HEADLESS=true` (already default)
 
 5. **Add Persistent Disk** (to save data between restarts):
    - Mount Path: `/opt/render/project/src/data`
@@ -263,16 +319,20 @@ Railway offers excellent developer experience with automatic deployments.
    - Select "Deploy from GitHub repo"
    - Choose your forked repository
 
-3. **Add environment variables:**
+3. **Add environment variables (only 4 required!):**
    ```
-   USM_EMAIL=your_email
+   USM_EMAIL=your_email@student.usm.my
    USM_PASSWORD=your_password
-   SMTP_USER=your_smtp_email
-   SMTP_PASS=your_smtp_password
-   SMTP_SERVER=smtp.gmail.com
-   SMTP_PORT=587
-   RUN_MODE=scheduled
-   HEADLESS=true
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASS=your_gmail_app_password
+   ```
+   
+   Optional (use defaults unless you need to customize):
+   ```
+   SMTP_SERVER=smtp.gmail.com  # Default for Gmail
+   SMTP_PORT=587               # Default TLS port
+   RUN_MODE=scheduled          # Already default
+   HEADLESS=true               # Already default
    ```
 
 4. **Configure start command** (in Railway settings):
@@ -391,28 +451,6 @@ sudo journalctl -u usm-elearning-monitor -f
 ---
 
 ## 🛠️ Advanced Usage
-
-### Finding Course IDs
-
-To configure selective monitoring, you need course IDs:
-
-1. Run the monitor once to fetch all courses
-2. Check `data/courses.json` - it will list all courses with IDs
-3. Add desired course IDs to `config.json`
-
-Example `data/courses.json`:
-```json
-{
-  "last_updated": "2025-01-15T10:30:00",
-  "courses": [
-    {
-      "id": "12345",
-      "name": "Introduction to Computer Science",
-      "url": "https://elearning.usm.my/..."
-    }
-  ]
-}
-```
 
 ### Running as Cron Job
 
